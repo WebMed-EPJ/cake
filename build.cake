@@ -88,7 +88,7 @@ Task("Restore-NuGet-Packages")
     .IsDependentOn("Clean")
     .Does<BuildParameters>((context, parameters) =>
 {
-    DotNetRestore("./src/Cake.sln", new DotNetRestoreSettings
+    DotNetRestore("./src/Cake.slnx", new DotNetRestoreSettings
     {
         Verbosity = DotNetVerbosity.Minimal,
         Sources = new [] { "https://api.nuget.org/v3/index.json" },
@@ -101,7 +101,7 @@ Task("Build")
     .Does<BuildParameters>((context, parameters) =>
 {
     // Build the solution.
-    var path = MakeAbsolute(new DirectoryPath("./src/Cake.sln"));
+    var path = MakeAbsolute(new DirectoryPath("./src/Cake.slnx"));
     DotNetBuild(path.FullPath, new DotNetBuildSettings
     {
         Configuration = parameters.Configuration,
@@ -214,7 +214,7 @@ Task("Upload-GitHubActions-Artifacts")
         static (context, parameters) => context
             .GitHubActions() is var gh && gh != null
                 ?   gh.Commands
-                    .UploadArtifact(parameters.Paths.Directories.NuGetRoot,  $"Artifact_{gh.Environment.Runner.ImageOS ?? gh.Environment.Runner.OS}_{context.Environment.Runtime.BuiltFramework.Identifier}_{context.Environment.Runtime.BuiltFramework.Version}")
+                    .UploadArtifact(parameters.Paths.Directories.NuGetRoot, $"Artifact_{gh.Environment.Runner.ImageOS ?? gh.Environment.Runner.OS}_{gh.Environment.Runner.Architecture}_{context.Environment.Runtime.BuiltFramework.Identifier}_{context.Environment.Runtime.BuiltFramework.Version}")
                 : throw new Exception("GitHubActions not available")
     );
 
@@ -416,7 +416,7 @@ Task("Run-Integration-Tests")
                 },
                 ArgumentCustomization = args => args
                     .AppendSwitchQuoted("--target", " ", Argument("integration-tests-target", "Run-All-Tests"))
-                    .AppendSwitchQuoted("--verbosity", " ", "quiet")
+                    .AppendSwitchQuoted("--verbosity", " ", Argument("integration-tests-verbosity", "quiet"))
                     .AppendSwitchQuoted("--platform", " ", parameters.IsRunningOnWindows ? "windows" : "posix")
                     .AppendSwitchQuoted("--customarg", " ", "hello")
                     .AppendSwitchQuoted("--multipleargs", "=", "a")
